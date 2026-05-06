@@ -1,0 +1,36 @@
+responses:
+  - headers:
+      - Date: "Wed, 06 May 2026 23:25:31 GMT"
+      - Content-Type: "application/json"
+      - Transfer-Encoding: "chunked"
+      - Connection: "keep-alive"
+      - Server: "cloudflare"
+      - Expires: "Thu, 19 Nov 1981 08:52:00 GMT"
+      - Cache-Control: "no-store, no-cache, must-revalidate"
+      - Pragma: "no-cache"
+      - Nel: |-
+          {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+      - Report-To: |-
+          {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=yhysPU7rg5k6IbKfIYozm2gKvdXzI9B9BZlxawK8PUzoxxe80PRcX2%2BFTIVKSTP%2Bm9zEJXU7zIhfhAKIYJZ2bXllkroqk0CeD7Eb8wrwGB6Sywz1hfPkzHrN09GaBOtcnvfBXAw8"}]}
+      - cf-cache-status: "DYNAMIC"
+      - Content-Encoding: "gzip"
+      - CF-RAY: "9f7bbea04d8d270e-AMS"
+      - alt-svc: |-
+          h3=":443"; ma=86400
+    body: |-
+      {"feeds":{"heatpump_elec":{"start_time":1641911700,"end_time":1778025540,"interval":98.82277092364848,"npoints":1377354,"unit":"W"},"heatpump_elec_kwh":{"start_time":1641911700,"end_time":1778025540,"interval":83.05245623562288,"npoints":1638891,"unit":"kWh"},"heatpump_heat":{"start_time":1641911700,"end_time":1778025540,"interval":99.00988543371523,"npoints":1374751,"unit":"W"},"heatpump_heat_kwh":{"start_time":1641911700,"end_time":1778025540,"interval":83.05245623562288,"npoints":1638891,"unit":"kWh"},"heatpump_flowT":{"start_time":1641911700,"end_time":1778025540,"interval":99.01010149503873,"npoints":1374748,"unit":"\u00b0C"},"heatpump_returnT":{"start_time":1641911700,"end_time":1778025540,"interval":99.01017351568944,"npoints":1374747,"unit":"\u00b0C"},"heatpump_roomT":{"start_time":1695642180,"end_time":1778025540,"interval":110.82610374288532,"npoints":743358,"unit":"\u00b0C"},"heatpump_outsideT":{"start_time":1641911700,"end_time":1778025540,"interval":99.01132586035077,"npoints":1374731,"unit":"\u00b0C"},"heatpump_dhw":{"start_time":1641911700,"end_time":1778025540,"interval":106.23179277775306,"npoints":1281292},"heatpump_ch":{"start_time":1641911700,"end_time":1778025540,"interval":106.23129532028874,"npoints":1281298},"heatpump_targetT":{"start_time":1695643380,"end_time":1778025540,"interval":126.64144562385187,"npoints":650516,"unit":"\u00b0C"},"heatpump_dhwT":{"start_time":1641911700,"end_time":1778025540,"interval":99.01132586035077,"npoints":1374731},"heatpump_dhwTargetT":{"start_time":1641911700,"end_time":1778025540,"interval":106.23179277775306,"npoints":1281292}},"start_date":1645747200}
+    status: 200
+    request:
+      txcount: 0
+      headers:
+        - Content-Length: "0"
+        - Accept: "application/json"
+        - Host: "heatpumpmonitor.org"
+        - User-Agent: "HTTP.jl/1.12.6"
+        - Accept-Encoding: "gzip"
+      body: ""
+      method: "GET"
+      target: "/timeseries/available?id=1"
+      version: "1.1.0"
+    version: "1.1.0"
+format: "1.0.0"

@@ -46,19 +46,67 @@ function _run_cassette_tests(BrokenRecord)
         @test isdir(_CASSETTES_DIR)
     end
 
-    # Add concrete cassette tests below. Recommended pattern (block
-    # syntax — matches BrokenRecord's `playback(f, name)` API):
-    #
-    # @testset "list pets (cassette)" begin
-    #     pets = BrokenRecord.playback("list_pets.yml") do
-    #         list_pets(HeatpumpMonitorAPI.Client("https://api.example.com";
-    #                                  auth = HeatpumpMonitorAPI.NoAuth()))
-    #     end
-    #     @test !isempty(pets)
-    # end
-    #
-    # First run records `test/cassettes/list_pets.yml`; subsequent runs
-    # replay it.
+    client = HeatpumpMonitorClient()
+    apis = heatpumpmonitor_apis(client)
+
+    @testset "get_system" begin
+        sys, response = BrokenRecord.playback("get_system.yml") do
+            get_system(apis.system, Int64(1))
+        end
+        @test response.status == 200
+        @test sys.id == 1
+        @test sys.location !== nothing
+        @test sys.hp_type !== nothing
+    end
+
+    @testset "stats_last90 (single system)" begin
+        body, response = BrokenRecord.playback("stats_last90_id1.yml") do
+            stats_last90(apis.system; id = Int64(1))
+        end
+        @test response.status == 200
+        @test body isa Dict{String}
+        @test haskey(body, "1")
+        s = body["1"]
+        @test hasproperty(s, :combined_cop)
+        @test hasproperty(s, :combined_data_length)
+    end
+
+    @testset "timeseries_available" begin
+        avail, response = BrokenRecord.playback("timeseries_available_id1.yml") do
+            timeseries_available(apis.timeseries, Int64(1))
+        end
+        @test response.status == 200
+        @test avail.feeds !== nothing
+        @test !isempty(avail.feeds)
+        @test "heatpump_elec" in keys(avail.feeds)
+    end
+
+    # Use a fixed, historical 24h window so the request URL is stable
+    # across recording sessions — BrokenRecord matches request shape.
+    # `start` and `end` are unix epoch seconds; system 1 has data going
+    # back to early 2022 so May 2025 will always have samples.
+    let start_ts = 1748000000, end_ts = start_ts + 86400
+        @testset "timeseries_data" begin
+            data, response = BrokenRecord.playback("timeseries_data_id1.yml") do
+                timeseries_data(apis.timeseries, Int64(1),
+                    "heatpump_elec,heatpump_heat,heatpump_flowT";
+                    start = string(start_ts),
+                    var"__end__" = string(end_ts),
+                    interval = 3600,
+                    average = 1)
+            end
+            @test response.status == 200
+            @test haskey(data, "heatpump_elec")
+            @test haskey(data, "heatpump_heat")
+            @test haskey(data, "heatpump_flowT")
+            # Each row is [timestamp_ms, value_or_nothing].
+            for row in data["heatpump_elec"]
+                @test length(row) == 2
+                @test row[1] isa Number   # timestamp always present
+            end
+        end
+    end
+
     return nothing
 end
 

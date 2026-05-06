@@ -1,0 +1,36 @@
+responses:
+  - headers:
+      - Date: "Wed, 06 May 2026 23:25:26 GMT"
+      - Content-Type: "application/json"
+      - Transfer-Encoding: "chunked"
+      - Connection: "keep-alive"
+      - Server: "cloudflare"
+      - Expires: "Thu, 19 Nov 1981 08:52:00 GMT"
+      - Cache-Control: "no-store, no-cache, must-revalidate"
+      - Pragma: "no-cache"
+      - Nel: |-
+          {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+      - Report-To: |-
+          {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=%2Fl4RKr3B%2Felwf03Pj9vk%2BL1PmRRZQB%2F1yJl9Jm5ZKR2n7cfwU1OHfwet8jDKUo1BG1yaL0fNG%2B9ri0nLXA1akRRy0qRofvO4ntsGDGsIZUz2WHw7bKHZZAxPxFiwFAT%2B1h22Xf04"}]}
+      - cf-cache-status: "DYNAMIC"
+      - Content-Encoding: "gzip"
+      - CF-RAY: "9f7bbe822da0270e-AMS"
+      - alt-svc: |-
+          h3=":443"; ma=86400
+    body: |-
+      {"id":1,"published":1,"last_updated":1763940817,"location":"Selby, Yorkshire","installer_name":"Green Building Renewables","installer_url":"https:\/\/www.greenbuildingrenewables.co.uk\/","share":1,"hp_model":"Ecodan","hp_type":"Air Source","hp_output":11.2,"refrigerant":"R32","dhw_method":"Cylinder with plate heat exchanger","cylinder_volume":250,"dhw_coil_hex_area":"0","new_radiators":1,"old_radiators":0,"fan_coil_radiators":0,"UFH":0,"hydraulic_separation":"Low loss header","flow_temp":50,"flow_temp_typical":"38","wc_curve":"0","freeze":"Glycol\/water mixture","zone_number":1,"space_heat_control_type":"Room influence only (e.g Auto adapt)","dhw_control_type":"Daily scheduled heat up of tank","dhw_target_temperature":"45","legionella_frequency":"Disabled","legionella_target_temperature":"0","property":"Detached","floor_area":134,"heat_demand":"14000","heat_loss":9.5,"age":"1940 to 1982","insulation":"Cavity wall, plus some loft insulation","electricity_tariff":"Agile Octopus","electricity_tariff_type":"Variable half hourly","electricity_tariff_unit_rate_all":"12","electricity_tariff_unit_rate_hp":"23.415","solar_pv_generation":"4000","solar_pv_self_consumption":"90","solar_pv_divert":"0","battery_storage_capacity":"8","electric_meter":"Other pulse output meter (class 1)","heat_meter":"Sontex heat meter (class 2)","metering_inc_boost":0,"metering_inc_central_heating_pumps":1,"metering_inc_brine_pumps":0,"metering_inc_controls":1,"notes":"Actual measured heat loss closer to 5.6 kW. Mostly out-of-the-box room auto-adapt mode, with some external nudges","mid_metering":1,"kwh_m2":"104","design_temp":-3,"water_heat_demand":"0","EPC_spaceheat_demand":"19958","EPC_waterheat_demand":"2835","heatgeek":0,"indoor_temperature":"0","betateach":"","installer_logo":"greenbuildingrenewables.png","ultimaterenewables":0,"heatingacademy":0,"youtube":null,"data_flag":0,"data_flag_note":"Defrost energy not included due to mitsubishi heat meter integration limitation.","hp_max_output":11.2,"measured_base_DT":1.4,"measured_design_DT":23,"measured_heat_loss":5.63,"measured_heat_loss_range":0.7,"hp_max_output_test":0,"volumiser":0,"legionella_immersion":0,"metering_inc_immersion":0,"uses_backup_heater":0,"metering_inc_secondary_heating_pumps":1,"weighted_average_flow_minus_outside":"30.3833","measured_mean_flow_temp_coldest_day":41.0564,"measured_max_flow_temp_coldest_day":41.2,"measured_outside_temp_coldest_day":-1.63697,"measured_emitter_spec":"0","measured_system_volume":"0","weighted_average_ideal_carnot":"8.33327","weighted_flow_temp":"37.0708","measured_room_temp_coldest_day":18.48,"latitude":53.7851,"longitude":-1.09904,"hp_manufacturer":"Mitsubishi","installation_Cost":0,"passivhaus_certification":"","dhw_make_model":null,"hp_hybrid":0,"boundary_code":4,"boundary_metering":{"compressor":true,"source_fan_or_brine":true,"brine_pump_metered":null,"primary_pump_metered":true,"secondary_pumps_metered":true,"immersion_heater_used":false,"immersion_heater_metered":null,"backup_heater_used":false,"backup_heater_metered":null,"hydraulic_separation":"Low loss header"}}
+    status: 200
+    request:
+      txcount: 0
+      headers:
+        - Content-Length: "0"
+        - Accept: "application/json"
+        - Host: "heatpumpmonitor.org"
+        - User-Agent: "HTTP.jl/1.12.6"
+        - Accept-Encoding: "gzip"
+      body: ""
+      method: "GET"
+      target: "/system/get.json?id=1"
+      version: "1.1.0"
+    version: "1.1.0"
+format: "1.0.0"

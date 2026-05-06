@@ -1,0 +1,36 @@
+responses:
+  - headers:
+      - Date: "Wed, 06 May 2026 23:25:31 GMT"
+      - Content-Type: "application/json"
+      - Transfer-Encoding: "chunked"
+      - Connection: "keep-alive"
+      - Server: "cloudflare"
+      - Expires: "Thu, 19 Nov 1981 08:52:00 GMT"
+      - Cache-Control: "no-store, no-cache, must-revalidate"
+      - Pragma: "no-cache"
+      - Nel: |-
+          {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+      - Report-To: |-
+          {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=bs78kN9ZRII3xC67hGjh%2Bm%2BfyGW81irUOByODalSzibOadqm9GGNxYc42q96vp0MOtSGqfVWJL4cta05wY0ecRgLM3HxKWKVjdJv12QZALUcu8YcxlL2IjkH7D8B4u7fS9yQmLWl"}]}
+      - cf-cache-status: "DYNAMIC"
+      - Content-Encoding: "gzip"
+      - CF-RAY: "9f7bbe9cee78270e-AMS"
+      - alt-svc: |-
+          h3=":443"; ma=86400
+    body: |-
+      {"1":{"id":1,"timestamp":false,"combined_elec_kwh":1109.13,"combined_heat_kwh":4224.42,"combined_cop":3.808769035189743,"combined_data_length":7659810,"combined_elec_mean":651.789,"combined_heat_mean":2452.6,"combined_flowT_mean":33.9283,"combined_returnT_mean":30.1447,"combined_outsideT_mean":7.984389999999999,"combined_roomT_mean":19.3768,"combined_prc_carnot":48.4539,"running_elec_kwh":1082.3,"running_heat_kwh":4209.8,"running_cop":3.8896793864917307,"running_data_length":2965550,"running_elec_mean":1319.88,"running_heat_mean":5128.17,"running_flowT_mean":37.8528,"running_returnT_mean":31.7976,"running_outsideT_mean":7.53538,"running_roomT_mean":19.1954,"running_prc_carnot":48.2896,"space_elec_kwh":993.345,"space_heat_kwh":3935.46,"space_cop":3.961825951708621,"space_data_length":2802410,"space_elec_mean":1282.82,"space_heat_mean":5074.67,"space_flowT_mean":37.4588,"space_returnT_mean":31.3829,"space_outsideT_mean":7.31566,"space_roomT_mean":19.1638,"space_prc_carnot":48.9512,"water_elec_kwh":88.957,"water_heat_kwh":274.349,"water_cop":3.084063086659847,"water_data_length":163140,"water_elec_mean":1982.05,"water_heat_mean":6132.8,"water_flowT_mean":44.738,"water_returnT_mean":38.8933,"water_outsideT_mean":11.1221,"water_roomT_mean":19.7184,"water_prc_carnot":40.4136,"cooling_elec_kwh":0,"cooling_heat_kwh":0,"cooling_cop":null,"cooling_data_length":0,"cooling_elec_mean":null,"cooling_heat_mean":null,"cooling_flowT_mean":null,"cooling_returnT_mean":null,"cooling_outsideT_mean":null,"cooling_roomT_mean":null,"cooling_prc_carnot":null,"combined_cooling_kwh":0,"combined_starts":650,"combined_starts_per_hour":0.3054906061638605,"from_energy_feeds_elec_kwh":1107.73,"from_energy_feeds_heat_kwh":4221.11,"from_energy_feeds_cop":3.8105946394879613,"quality_elec":98.506,"quality_heat":98.506,"quality_flowT":98.5091,"quality_returnT":98.506,"quality_outsideT":98.5091,"quality_roomT":98.5091,"error_air":720,"error_air_kwh":0.042,"immersion_kwh":0,"boiler_kwh":0,"unit_rate_agile":14.4,"unit_rate_cosy":19.1,"unit_rate_go":23.1,"unit_rate_eon_next_pumped_v2":0,"weighted_flowT":38.3136,"weighted_outsideT":7.51112,"weighted_flowT_minus_outsideT":30.8025,"weighted_flowT_minus_returnT":6.59706,"weighted_elec":1411.95,"weighted_heat":5593.29,"weighted_prc_carnot":48.55436270356335,"weighted_kwh_elec":1109.13,"weighted_kwh_heat":4224.42,"weighted_kwh_heat_running":4217.06,"weighted_kwh_elec_running":1073.99,"weighted_kwh_carnot_elec":521.469,"weighted_time_on":2909620,"weighted_time_total":7659810,"weighted_cycle_count":604}}
+    status: 200
+    request:
+      txcount: 0
+      headers:
+        - Content-Length: "0"
+        - Accept: "application/json"
+        - Host: "heatpumpmonitor.org"
+        - User-Agent: "HTTP.jl/1.12.6"
+        - Accept-Encoding: "gzip"
+      body: ""
+      method: "GET"
+      target: "/system/stats/last90?id=1"
+      version: "1.1.0"
+    version: "1.1.0"
+format: "1.0.0"
