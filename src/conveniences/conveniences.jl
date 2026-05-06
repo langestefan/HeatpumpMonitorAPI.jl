@@ -4,6 +4,8 @@
 
 using OpenAPI: OpenAPI
 
+include("helpers.jl")
+
 const DEFAULT_BASE_URL = "https://heatpumpmonitor.org"
 
 """

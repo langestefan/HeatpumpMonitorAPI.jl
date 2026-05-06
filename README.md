@@ -122,6 +122,32 @@ spec):
 - The end query param is named `end`, which is reserved in Julia. Pass
   it as ``var"__end__" = "..."`` (the codegen renamed it).
 
+## Helpers
+
+A few small post-processing helpers ship in the conveniences layer to
+absorb the upstream API's quirks:
+
+```julia
+# Coerce a SystemStats field to Float64-or-nothing regardless of whether
+# the upstream serialized it as a number, a numeric string, or false.
+as_number(s.combined_cop)            # 2.4
+as_number("2.4")                     # 2.4 — same answer for /monthly's stringified form
+as_number(false)                     # nothing — sentinel for "system never scored"
+
+# stats_daily/<id> returns text/plain CSV; this turns it into per-day rows.
+csv, _ = stats_daily(apis.system, 1)
+rows   = parse_daily_stats(csv)
+rows[end]["combined_cop"]            # 2.4 :: Float64
+
+# /timeseries/data returns {feed: [[unix_ms, value_or_nothing], ...]}.
+# flatten_timeseries gives you (DateTime, value) pairs per feed.
+raw, _ = timeseries_data(apis.timeseries, 1, "heatpump_elec";
+                         start = "1748000000", var"__end__" = "1748086400",
+                         interval = 3600, average = 1)
+ts = flatten_timeseries(raw)
+ts["heatpump_elec"][1]               # (DateTime("2025-05-23T11:33:20"), 19.98)
+```
+
 ## Reliability stack
 
 Compose retry / rate-limit / timeout / logging at the call site:
