@@ -290,8 +290,8 @@
                       "type": "array",
                       "minItems": 2,
                       "maxItems": 2,
-                      "items": { "type": ["number", "null"] },
-                      "description": "[timestamp_ms, value]. timestamp_ms is unix epoch milliseconds."
+                      "items": {},
+                      "description": "[timestamp_ms, value]. timestamp_ms is unix epoch milliseconds (always a number); value is a number or null."
                     }
                   }
                 }

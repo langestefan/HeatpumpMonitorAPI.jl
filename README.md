@@ -8,8 +8,19 @@
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![tested with JET.jl](https://img.shields.io/badge/%F0%9F%9B%A9%EF%B8%8F_tested_with-JET.jl-233f9a)](https://github.com/aviatesk/JET.jl)
 
-A Julia REST/JSON API wrapper, scaffolded with
-[OpenAPITemplate.jl](https://github.com/langestefan/OpenAPITemplate.jl).
+A Julia client for the
+[HeatpumpMonitor.org](https://heatpumpmonitor.org) public REST API.
+HeatpumpMonitor.org is part of the
+[OpenEnergyMonitor](https://openenergymonitor.org) project and tracks
+in-the-field performance (COP, flow/return temps, energy use, weather
+compensation, etc.) for hundreds of community-submitted heat-pump
+installations.
+
+The OpenAPI spec under `spec/openapi.json` was reverse-engineered from
+the [API helper page](https://heatpumpmonitor.org/api-helper) and
+verified empirically against the live API; see the spec's `info.description`
+for documented serialization quirks (numeric strings on the monthly
+endpoint, `false` timestamps, dynamic `unit_rate_*` fields, etc.).
 
 ## Architecture
 
@@ -20,6 +31,8 @@ Two layers:
   end users do not need Java or Node.
 - **`src/client/`** — hand-written ergonomic overlay: `Client` struct
   composed with auth strategies and reliability primitives.
+- **`src/conveniences/`** — HeatpumpMonitor-specific helpers
+  (`HeatpumpMonitorClient`, `heatpumpmonitor_apis`).
 
 ## Installation
 
@@ -33,18 +46,81 @@ Pkg.add(url = "https://github.com/langestefan/HeatpumpMonitorAPI.jl")
 ```julia
 using HeatpumpMonitorAPI
 
-# Auth strategies: NoAuth, BearerToken, APIKey, BasicAuth
-client = Client("https://api.example.com";
-                auth = BearerToken(ENV["HEATPUMPMONITORAPI_TOKEN"]))
+client = HeatpumpMonitorClient()
+apis   = heatpumpmonitor_apis(client)
+
+# All public systems with their metadata.
+systems, _ = list_public_systems(apis.system)
+@show length(systems) systems[1].id systems[1].location systems[1].hp_model
+
+# 90-day stats for a single system. The stats endpoints return a
+# Dict{String, SystemStats} keyed by system ID (as string), even when
+# you supply id=...
+stats, _ = stats_last90(apis.system; id = systems[1].id)
+s = stats[string(systems[1].id)]
+@show s.combined_cop s.running_flowT_mean s.combined_data_length
+
+# What feeds does this system publish?
+avail, _ = timeseries_available(apis.timeseries, systems[1].id)
+collect(keys(avail.feeds))      # e.g. ["heatpump_elec", "heatpump_heat", ...]
+
+# Last 24h of timeseries data, hourly average. Response is
+# Dict{String, Vector{Vector{Any}}} of [timestamp_ms, value_or_nothing].
+using Dates
+end_ts   = round(Int, datetime2unix(now(UTC)))
+start_ts = end_ts - 86400
+data, _  = timeseries_data(apis.timeseries, systems[1].id,
+                           "heatpump_elec,heatpump_heat,heatpump_flowT";
+                           start = string(start_ts),
+                           var"__end__" = string(end_ts),
+                           interval = 3600, average = 1)
+data["heatpump_flowT"][1]   # [1758139200000, 32.5]
 ```
 
-`resolve_credentials` picks up env vars (`HEATPUMPMONITORAPI_TOKEN`,
-`HEATPUMPMONITORAPI_API_KEY`, `HEATPUMPMONITORAPI_USERNAME` / `HEATPUMPMONITORAPI_PASSWORD`)
-or falls back to `~/.config/heatpumpmonitorapi/credentials.toml`:
+### Authenticated `/system/list/user.json`
+
+The single non-public endpoint reuses the website's session cookie.
+Log in via the web UI at
+[heatpumpmonitor.org/user/login](https://heatpumpmonitor.org/user/login),
+copy the `PHPSESSID` cookie out of your browser, and pass it through:
 
 ```julia
-client = Client("https://api.example.com"; auth = resolve_credentials(BearerToken))
+client = HeatpumpMonitorClient(; session_cookie = ENV["HPM_SESSION"])
+apis   = heatpumpmonitor_apis(client)
+mine, _ = list_user_systems(apis.system)
 ```
+
+## Endpoints
+
+Generated under `apis.system` and `apis.timeseries`:
+
+| Function                    | HTTP path                            | Returns |
+| --------------------------- | ------------------------------------ | ------- |
+| `list_public_systems`       | `GET /system/list/public.json`       | `Vector{SystemMeta}` |
+| `list_user_systems`         | `GET /system/list/user.json`         | `Vector{SystemMeta}` (auth) |
+| `get_system`                | `GET /system/get.json`               | `SystemMeta` |
+| `stats_last7`/`30`/`90`/`365`/`all` | `GET /system/stats/lastN`    | `Dict{String, SystemStats}` |
+| `stats_custom_window`       | `GET /system/stats`                  | `Dict{String, SystemStats}` |
+| `stats_daily`               | `GET /system/stats/daily`            | `String` (CSV, `text/plain`) |
+| `stats_monthly`             | `GET /system/stats/monthly`          | `Vector{SystemStats}` |
+| `timeseries_available`      | `GET /timeseries/available`          | `TimeseriesAvailable` |
+| `timeseries_data`           | `GET /timeseries/data`               | `Dict{String, Vector{Vector{Any}}}` |
+
+A few caller-visible quirks worth remembering (also documented in the
+spec):
+
+- The stats endpoints **always** return a map keyed by system ID, even
+  when you pass `id=...` — so `stats_last90(apis.system; id=1)` gives
+  `Dict("1" => SystemStats(...))`, not a flat `SystemStats`.
+- `stats_monthly` stringifies all numeric fields (`"40.4423"`) while the
+  other stats endpoints return raw numbers — `SystemStats` fields are
+  typed permissively to accept both.
+- `timeseries_data` timestamps are unix epoch **milliseconds** (not
+  seconds). Calling with a feed name that doesn't exist on the system
+  causes upstream PHP warnings to be inlined into the response body —
+  always call `timeseries_available` first.
+- The end query param is named `end`, which is reserved in Julia. Pass
+  it as ``var"__end__" = "..."`` (the codegen renamed it).
 
 ## Reliability stack
 
@@ -56,7 +132,7 @@ result = with_defaults(;
     rate_limit = TokenBucket(; rate = 10.0, burst = 10.0),
     timeout    = 5.0,
 ) do
-    list_things(client)        # an endpoint from src/api/
+    list_public_systems(apis.system)
 end
 ```
 
@@ -65,15 +141,10 @@ honours `Retry-After` headers and retries on `408/429/5xx`.
 
 ## Pagination
 
-```julia
-for thing in paginate_offset((offset, limit) -> list_things(client; offset, limit))
-    @show thing
-end
-```
-
-Also available: `paginate_cursor`, `paginate_pagenum`. Each returns a lazy
-`Channel`, so callers iterate one item at a time without buffering the
-full result set.
+The HeatpumpMonitor.org API is fully un-paginated — every list endpoint
+returns its full result set in one call. The pagination iterators
+(`paginate_cursor`, `paginate_offset`, `paginate_pagenum`) ship with the
+template and remain available for downstream code that wraps another API.
 
 ## Errors
 
@@ -86,31 +157,34 @@ Every non-2xx response is mapped to a typed exception by `check_response`:
 | Other 4xx | `ClientError` |
 | 5xx | `ServerError` |
 | Network / DNS / TLS | `NetworkError` (wraps cause) |
-| Timeout | `TimeoutError(:connect | :read | :total)` |
+| Timeout | `TimeoutError(:connect \| :read \| :total)` |
 
 ## Re-running codegen
 
-The spec is committed at `spec/openapi.json`. To pull a newer version of
-the upstream spec and regenerate `src/api/`:
+The spec is committed at `spec/openapi.json`. To regenerate `src/api/`
+after editing the spec:
 
-```julia
+```bash
+julia --project gen/regenerate.jl --no-fetch
+```
+
+To pull a newer version from a remote URL (none currently pinned for
+this project — the spec is hand-maintained against `api-helper`):
+
+```bash
 julia --project gen/regenerate.jl
 ```
 
-For tighter inner loops while iterating on a spec locally:
+Use a different local spec as the source:
 
-```julia
-# Skip the download; reuse the spec already on disk.
-julia --project gen/regenerate.jl --no-fetch
-
-# Use a local (possibly edited) spec file as the source.
-julia --project gen/regenerate.jl --from-file ../my-edited-spec.yaml
+```bash
+julia --project gen/regenerate.jl --from-file path/to/other.json
 ```
 
-Requires Java 11+ and Node 18+. The pinned generator version lives in
-`gen/openapi-config.json`. The scheduled
-`.github/workflows/regen-check.yml` runs this weekly and opens a PR if
-the diff is non-empty — this is the only CI workflow that needs Java.
+Requires Java 11+ and Node 18+ on the maintainer machine. The
+`scripts/smoke_test.jl` script exercises every operation against the
+live API and is the quickest way to verify a regeneration didn't break
+deserialization.
 
 ## Building docs
 
@@ -123,28 +197,3 @@ cd docs && npm install && npm run docs:dev
 The interactive REST API browser lives under `docs/src/api/` and is
 rendered from `spec/openapi.json` via
 [`vitepress-openapi`](https://github.com/enzonotario/vitepress-openapi).
-
-## What to do next
-
-Concrete checklist for moving this scaffold to a real package:
-
-- [ ] Open `src/client/Client.jl` and decide whether the bare `Client`
-      struct is enough, or whether to thread a `DefaultMiddleware` through it.
-- [ ] If the API uses OAuth2 or a custom auth scheme, add a struct
-      under `src/client/auth.jl` that `apply!`s to a `Dict{String,String}`.
-- [ ] Replace the placeholder `ENV["HEATPUMPMONITORAPI_TOKEN"]` references
-      throughout the README and tests with the real env-var name.
-- [ ] After `pkg> activate test; pkg> add BrokenRecord@0.1`, write at least
-      one test using `BrokenRecord.playback(f, "<name>.yml")` and run it
-      once on a machine with network + valid credentials. The cassette
-      is written to `test/cassettes/<name>.yml`; commit it. Subsequent
-      runs replay deterministically.
-- [ ] Skim `src/api/` once and note any rough edges from the BETA
-      `julia-client` generator (typically nullable types and OAuth2
-      schemes — see `OPENAPI_GENERATOR_NOTES.md` if present).
-- [ ] Customize this README — replace this section with concrete
-      domain examples and a brief domain-level overview.
-- [ ] Set the `CODECOV_TOKEN` secret on GitHub if you want coverage reports.
-- [ ] When ready to publish, register the package via
-      [JuliaRegistries/General](https://github.com/JuliaRegistries/General)
-      using the standard `@JuliaRegistrator register()` comment flow.

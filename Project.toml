@@ -1,4 +1,5 @@
 authors = ["Stefan de Lange <langestefan@msn.com> and contributors"]
+description = "Julia client for the HeatpumpMonitor.org public REST API."
 name = "HeatpumpMonitorAPI"
 uuid = "02e9e751-2a84-424c-9fff-cdfd6c357bb6"
 version = "1.0.0-DEV"

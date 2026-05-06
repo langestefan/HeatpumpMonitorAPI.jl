@@ -35,4 +35,11 @@ export with_logging, redact_headers
 export DefaultMiddleware, default_middleware, with_defaults
 export paginate_cursor, paginate_offset, paginate_pagenum
 
+# HeatpumpMonitor-specific helpers (hand-written, not part of the codegen
+# output). Safe across `gen/regenerate.jl` runs — that script only rewrites
+# `src/api/`.
+include("conveniences/conveniences.jl")
+
+export HeatpumpMonitorClient, heatpumpmonitor_apis, DEFAULT_BASE_URL
+
 end # module

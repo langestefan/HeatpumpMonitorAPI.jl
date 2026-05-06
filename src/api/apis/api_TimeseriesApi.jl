@@ -45,7 +45,7 @@ function timeseries_available(_api::TimeseriesApi, response_stream::Channel, id:
 end
 
 const _returntypes_timeseries_data_TimeseriesApi = Dict{Regex,Type}(
-    Regex("^" * replace("200", "x"=>".") * "\$") => Dict{String, Vector{Vector{Float64}}},
+    Regex("^" * replace("200", "x"=>".") * "\$") => Dict{String, Vector{Vector{Any}}},
 )
 
 function _oacinternal_timeseries_data(_api::TimeseriesApi, id::Int64, feeds::String; start=nothing, __end__=nothing, interval=nothing, average=nothing, delta=nothing, timeformat=nothing, _mediaType=nothing)
@@ -79,7 +79,7 @@ Params:
 - delta::Int64
 - timeformat::String
 
-Return: Dict{String, Vector{Vector{Float64}}}, OpenAPI.Clients.ApiResponse
+Return: Dict{String, Vector{Vector{Any}}}, OpenAPI.Clients.ApiResponse
 """
 function timeseries_data(_api::TimeseriesApi, id::Int64, feeds::String; start=nothing, __end__=nothing, interval=nothing, average=nothing, delta=nothing, timeformat=nothing, _mediaType=nothing)
     _ctx = _oacinternal_timeseries_data(_api, id, feeds; start=start, __end__=__end__, interval=interval, average=average, delta=delta, timeformat=timeformat, _mediaType=_mediaType)
