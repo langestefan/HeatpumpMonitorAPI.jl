@@ -1,0 +1,624 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "HeatpumpMonitor.org API",
+    "version": "1.2.0",
+    "description": "Unofficial OpenAPI specification for the HeatpumpMonitor.org public API. Compiled from https://heatpumpmonitor.org/api-helper and verified empirically against the live API on 2026-05-07. HeatpumpMonitor.org is part of the OpenEnergyMonitor project (https://openenergymonitor.org).\n\nUpstream serialization quirks captured in this spec:\n  * Many SystemMeta fields are stored as form values and round-trip as strings even when they hold numeric data (e.g. `kwh_m2`, `heat_demand`, `dhw_target_temperature`, `weighted_*`).\n  * `/system/stats/monthly` stringifies every numeric field; the other stats endpoints return raw numbers. SystemStats numeric fields therefore accept both `number` and `string` representations.\n  * `timestamp` in stats responses can be `false` when the system has never been scored.\n  * Boolean-style toggles (e.g. `UFH`, `mid_metering`, `metering_inc_*`, `published`, `volumiser`) are returned as integer 0/1.\n  * Schemas use `additionalProperties: true` so dynamic / per-tariff fields (e.g. new `unit_rate_*` keys) do not fail validation.",
+    "contact": {
+      "name": "HeatpumpMonitor.org",
+      "url": "https://heatpumpmonitor.org"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://heatpumpmonitor.org",
+      "description": "Production"
+    }
+  ],
+  "tags": [
+    { "name": "system", "description": "System metadata and statistics" },
+    { "name": "timeseries", "description": "Per-feed timeseries data" }
+  ],
+  "security": [],
+  "paths": {
+    "/system/list/public.json": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "listPublicSystems",
+        "summary": "List public systems",
+        "description": "List of public systems with all system form meta data.",
+        "responses": {
+          "200": {
+            "description": "Array of public systems with metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SystemMeta" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/list/user.json": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "listUserSystems",
+        "summary": "List the logged-in user's systems",
+        "description": "When logged in this returns the system list for the logged-in user. Requires an authenticated session cookie established via the web UI at /user/login.",
+        "security": [{ "sessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Array of systems owned by the authenticated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SystemMeta" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Not authenticated." }
+        }
+      }
+    },
+    "/system/get.json": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "getSystem",
+        "summary": "Get metadata for a single system",
+        "description": "Returns meta data for the selected system. The shape is a subset of /system/list/public.json — the following fields are present only in /list and absent here: `heatpump_elec_feedid`, `heatpump_heat_feedid`, `heatpump_elec_ago`, `heatpump_heat_ago`, `heatpump_max_age`, `heatpump_model_id`, `heatpump_url`, `manufacturer_id`, `photo_count`.",
+        "parameters": [
+          { "$ref": "#/components/parameters/SystemIdRequired" }
+        ],
+        "responses": {
+          "200": {
+            "description": "System metadata.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SystemMeta" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/stats/last7": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "statsLast7",
+        "summary": "Stats summary for the last 7 days",
+        "description": "Returns a map keyed by system ID (as string). When `id` is provided the map contains a single entry.",
+        "parameters": [{ "$ref": "#/components/parameters/SystemIdOptional" }],
+        "responses": { "200": { "$ref": "#/components/responses/StatsResponse" } }
+      }
+    },
+    "/system/stats/last30": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "statsLast30",
+        "summary": "Stats summary for the last 30 days",
+        "description": "Returns a map keyed by system ID (as string).",
+        "parameters": [{ "$ref": "#/components/parameters/SystemIdOptional" }],
+        "responses": { "200": { "$ref": "#/components/responses/StatsResponse" } }
+      }
+    },
+    "/system/stats/last90": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "statsLast90",
+        "summary": "Stats summary for the last 90 days",
+        "description": "Returns a map keyed by system ID (as string).",
+        "parameters": [{ "$ref": "#/components/parameters/SystemIdOptional" }],
+        "responses": { "200": { "$ref": "#/components/responses/StatsResponse" } }
+      }
+    },
+    "/system/stats/last365": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "statsLast365",
+        "summary": "Stats summary for the last 365 days",
+        "description": "Returns a map keyed by system ID (as string).",
+        "parameters": [{ "$ref": "#/components/parameters/SystemIdOptional" }],
+        "responses": { "200": { "$ref": "#/components/responses/StatsResponse" } }
+      }
+    },
+    "/system/stats/all": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "statsAll",
+        "summary": "Stats summary over all available time",
+        "description": "Returns a map keyed by system ID (as string).",
+        "parameters": [{ "$ref": "#/components/parameters/SystemIdOptional" }],
+        "responses": { "200": { "$ref": "#/components/responses/StatsResponse" } }
+      }
+    },
+    "/system/stats": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "statsCustomWindow",
+        "summary": "Stats summary for a custom time window",
+        "description": "Returns a map keyed by system ID (as string).",
+        "parameters": [
+          { "$ref": "#/components/parameters/SystemIdOptional" },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "description": "Window start date (inclusive), format YYYY-MM-DD.",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "description": "Window end date (inclusive), format YYYY-MM-DD.",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/StatsResponse" } }
+      }
+    },
+    "/system/stats/daily": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "statsDaily",
+        "summary": "Daily stats as CSV",
+        "description": "Returns all daily data for the specified system as CSV. The first row is the header; columns include the SystemStats fields plus `cooling_*` and `weighted_*`. Date-range parameters are not yet supported by the upstream service.\n\nNote: upstream returns the body with `Content-Type: text/plain; charset=UTF-8` (not `text/csv`).",
+        "parameters": [{ "$ref": "#/components/parameters/SystemIdRequired" }],
+        "responses": {
+          "200": {
+            "description": "CSV-formatted daily statistics. One row per day.",
+            "content": { "text/plain": { "schema": { "type": "string" } } }
+          }
+        }
+      }
+    },
+    "/system/stats/monthly": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "statsMonthly",
+        "summary": "Monthly stats as JSON",
+        "description": "Returns a JSON array of per-month stats records for the specified system. Each element is a SystemStats record covering one calendar month, with `timestamp` (start-of-month, unix epoch seconds) identifying the month. All numeric fields are returned as strings by this endpoint.",
+        "parameters": [{ "$ref": "#/components/parameters/SystemIdRequired" }],
+        "responses": {
+          "200": {
+            "description": "Array of per-month stats records.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SystemStats" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/timeseries/available": {
+      "get": {
+        "tags": ["timeseries"],
+        "operationId": "timeseriesAvailable",
+        "summary": "List available timeseries feeds for a system",
+        "description": "Returns the set of timeseries feeds available for the system, with metadata for each feed.",
+        "parameters": [{ "$ref": "#/components/parameters/SystemIdRequired" }],
+        "responses": {
+          "200": {
+            "description": "Available feeds plus top-level metadata.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TimeseriesAvailable" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/timeseries/data": {
+      "get": {
+        "tags": ["timeseries"],
+        "operationId": "timeseriesData",
+        "summary": "Fetch timeseries data for one or more feeds",
+        "description": "Returns timeseries data for a given system. Response is a JSON object keyed by feed name; each value is an array of `[timestamp_ms, value]` pairs (timestamp is unix epoch in milliseconds; value is a number, possibly null).\n\nRequesting a feed name that does not exist on the system causes the upstream PHP backend to inline a warning into the response body (HTTP 200 but invalid JSON). Always call /timeseries/available first to discover valid feed names.",
+        "parameters": [
+          { "$ref": "#/components/parameters/SystemIdRequired" },
+          {
+            "name": "feeds",
+            "in": "query",
+            "required": true,
+            "description": "Comma-separated list of feed names. See /timeseries/available for valid names.",
+            "schema": { "type": "string" },
+            "example": "heatpump_elec,heatpump_heat,heatpump_flowT"
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "description": "Window start as unix epoch seconds.",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "description": "Window end as unix epoch seconds.",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "description": "Sample interval in seconds.",
+            "schema": { "type": "integer", "default": 3600 }
+          },
+          {
+            "name": "average",
+            "in": "query",
+            "required": false,
+            "description": "If 1, average values within each interval.",
+            "schema": { "type": "integer", "enum": [0, 1], "default": 1 }
+          },
+          {
+            "name": "delta",
+            "in": "query",
+            "required": false,
+            "description": "If 1, return per-interval deltas (intended for cumulative feeds such as kWh counters).",
+            "schema": { "type": "integer", "enum": [0, 1], "default": 0 }
+          },
+          {
+            "name": "timeformat",
+            "in": "query",
+            "required": false,
+            "description": "Accepted by the endpoint but does not change the observed response structure (always `[timestamp_ms, value]` pairs). Known accepted values: `notime`, `unix`. Other values (e.g. `iso`, `ms`) return an error envelope `{success, message}` with HTTP 200.",
+            "schema": { "type": "string", "enum": ["notime", "unix"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Per-feed timeseries data. Keys are the requested feed names; values are arrays of [timestamp_ms, value] pairs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": { "type": ["number", "null"] },
+                      "description": "[timestamp_ms, value]. timestamp_ms is unix epoch milliseconds."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "PHPSESSID",
+        "description": "Session cookie established by logging in via the web UI at /user/login. Required only for /system/list/user.json. Cookie name is implementation-specific to the upstream PHP application; verify against your captured Set-Cookie header."
+      }
+    },
+    "parameters": {
+      "SystemIdRequired": {
+        "name": "id",
+        "in": "query",
+        "required": true,
+        "description": "System ID.",
+        "schema": { "type": "integer", "minimum": 1 }
+      },
+      "SystemIdOptional": {
+        "name": "id",
+        "in": "query",
+        "required": false,
+        "description": "If provided, the response map contains only this system's stats; otherwise the map covers every system that has data for the window.",
+        "schema": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "responses": {
+      "StatsResponse": {
+        "description": "Stats summary keyed by system ID (as string). When the `id` query parameter is provided the map contains a single entry whose key is that ID.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "description": "Map of system_id (as string) to SystemStats.",
+              "additionalProperties": { "$ref": "#/components/schemas/SystemStats" }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "BoundaryMetering": {
+        "type": "object",
+        "description": "Which components fall inside the metering boundary for the system. Field types reflect the upstream API: most are tri-state booleans (`true`/`false`/`null`), `hydraulic_separation` is a free-text label.",
+        "properties": {
+          "compressor":               { "type": ["boolean", "null"] },
+          "source_fan_or_brine":      { "type": ["boolean", "null"] },
+          "primary_pump_metered":     { "type": ["boolean", "null"] },
+          "secondary_pumps_metered":  { "type": ["boolean", "null"] },
+          "brine_pump_metered":       { "type": ["boolean", "null"] },
+          "immersion_heater_used":    { "type": ["boolean", "null"] },
+          "immersion_heater_metered": { "type": ["boolean", "null"] },
+          "backup_heater_used":       { "type": ["boolean", "null"] },
+          "backup_heater_metered":    { "type": ["boolean", "null"] },
+          "hydraulic_separation":     { "type": ["string",  "null"] }
+        },
+        "additionalProperties": true
+      },
+      "SystemMeta": {
+        "type": "object",
+        "description": "System metadata. Field set verified against /system/list/public.json (103 distinct fields across 742 public systems on 2026-05-07). The /system/get.json variant is a subset that omits `heatpump_elec_feedid`, `heatpump_heat_feedid`, `heatpump_elec_ago`, `heatpump_heat_ago`, `heatpump_max_age`, `heatpump_model_id`, `heatpump_url`, `manufacturer_id`, and `photo_count`.\n\nMany fields are stored as form values upstream and round-trip as strings even when they hold numeric data. Boolean-style toggles are returned as integer 0/1.",
+        "properties": {
+          "id":                       { "type": "integer", "description": "Unique system ID." },
+          "location":                 { "type": ["string", "null"] },
+          "latitude":                 { "type": ["number", "null"] },
+          "longitude":                { "type": ["number", "null"] },
+          "boundary_code":            { "type": ["integer", "null"], "description": "Climate / region boundary code." },
+          "boundary_metering":        { "$ref": "#/components/schemas/BoundaryMetering" },
+          "last_updated":             { "type": ["integer", "null"], "description": "Unix epoch seconds." },
+          "published":                { "type": ["integer", "null"], "description": "0/1." },
+          "share":                    { "type": ["integer", "null"], "description": "0/1 visibility flag." },
+          "data_flag":                { "type": ["integer", "null"], "description": "Internal data-quality flag (0/1)." },
+          "data_flag_note":           { "type": ["string",  "null"] },
+          "photo_count":              { "type": ["string",  "null"], "description": "Number of photos as numeric string. Present only in /system/list/public.json." },
+
+          "installer_name":           { "type": ["string", "null"] },
+          "installer_url":            { "type": ["string", "null"] },
+          "installer_logo":           { "type": ["string", "null"] },
+          "heatgeek":                 { "type": ["integer", "null"], "description": "0/1." },
+          "ultimaterenewables":       { "type": ["integer", "null"], "description": "0/1." },
+          "heatingacademy":           { "type": ["integer", "null"], "description": "0/1." },
+          "betateach":                { "type": ["string", "integer", "null"] },
+          "youtube":                  { "type": ["string", "null"] },
+          "heatpump_url":             { "type": ["string", "null"], "description": "Present only in /system/list/public.json." },
+
+          "hp_model":                 { "type": ["string", "null"] },
+          "hp_manufacturer":          { "type": ["string", "null"] },
+          "hp_type":                  { "type": ["string", "null"], "description": "e.g. ASHP, GSHP." },
+          "hp_output":                { "type": ["number", "null"], "description": "Rated heat output (kW)." },
+          "hp_max_output":            { "type": ["number", "null"] },
+          "hp_max_output_test":       { "type": ["number", "null"], "description": "Test condition reference for `hp_max_output`." },
+          "hp_hybrid":                { "type": ["integer", "null"], "description": "0/1." },
+          "uses_backup_heater":       { "type": ["integer", "null"], "description": "0/1." },
+          "refrigerant":              { "type": ["string", "null"] },
+          "manufacturer_id":          { "type": ["string", "null"], "description": "Numeric string. /list only." },
+          "heatpump_model_id":        { "type": ["string", "null"], "description": "Numeric string. /list only." },
+
+          "heatpump_elec_feedid":     { "type": ["boolean", "integer", "null"], "description": "Feed ID for electrical input. Returned as `false` for unauthenticated requests. /list only." },
+          "heatpump_heat_feedid":     { "type": ["boolean", "integer", "null"], "description": "Feed ID for heat output. Returned as `false` for unauthenticated requests. /list only." },
+          "heatpump_elec_ago":        { "type": ["integer", "null"], "description": "Seconds since the last electrical feed sample. /list only." },
+          "heatpump_heat_ago":        { "type": ["integer", "null"], "description": "Seconds since the last heat feed sample. /list only." },
+          "heatpump_max_age":         { "type": ["integer", "null"], "description": "Threshold (seconds) used to decide whether the system is considered up-to-date. /list only." },
+
+          "dhw_method":               { "type": ["string", "null"] },
+          "dhw_make_model":           { "type": ["string", "null"] },
+          "dhw_control_type":         { "type": ["string", "null"] },
+          "dhw_target_temperature":   { "type": ["string", "null"], "description": "°C. Numeric string." },
+          "cylinder_volume":          { "type": ["integer", "null"], "description": "Litres." },
+          "dhw_coil_hex_area":        { "type": ["string", "null"], "description": "DHW coil heat exchanger area (m²). Numeric string." },
+          "legionella_frequency":     { "type": ["string", "null"] },
+          "legionella_target_temperature": { "type": ["string", "null"], "description": "°C. Numeric string." },
+          "legionella_immersion":     { "type": ["integer", "null"], "description": "0/1." },
+
+          "new_radiators":            { "type": ["integer", "null"], "description": "0/1." },
+          "old_radiators":            { "type": ["integer", "null"], "description": "0/1." },
+          "fan_coil_radiators":       { "type": ["integer", "null"], "description": "0/1." },
+          "UFH":                      { "type": ["integer", "null"], "description": "Underfloor heating present (0/1)." },
+          "hydraulic_separation":     { "type": ["string", "null"] },
+          "volumiser":                { "type": ["integer", "null"], "description": "0/1." },
+
+          "flow_temp":                { "type": ["number", "null"], "description": "Design flow temperature (°C)." },
+          "flow_temp_typical":        { "type": ["string", "null"], "description": "°C. Numeric string." },
+          "design_temp":              { "type": ["number", "null"], "description": "Design outside temperature (°C)." },
+          "wc_curve":                 { "type": ["string", "null"], "description": "Weather compensation curve setting. Numeric string." },
+          "freeze":                   { "type": ["string", "null"] },
+          "zone_number":              { "type": ["integer", "null"] },
+          "space_heat_control_type":  { "type": ["string", "null"] },
+          "indoor_temperature":       { "type": ["string", "null"], "description": "°C. Numeric string." },
+
+          "property":                 { "type": ["string", "null"], "description": "Property type." },
+          "age":                      { "type": ["string", "null"], "description": "Property age band." },
+          "insulation":               { "type": ["string", "null"] },
+          "passivhaus_certification": { "type": ["string", "null"] },
+          "floor_area":               { "type": ["number", "null"], "description": "m²." },
+          "heat_demand":              { "type": ["string", "null"], "description": "Annual space heat demand (kWh). Numeric string." },
+          "water_heat_demand":        { "type": ["string", "null"], "description": "Annual DHW heat demand (kWh). Numeric string." },
+          "EPC_spaceheat_demand":     { "type": ["string", "null"], "description": "kWh. Numeric string." },
+          "EPC_waterheat_demand":     { "type": ["string", "null"], "description": "kWh. Numeric string." },
+          "heat_loss":                { "type": ["number", "null"], "description": "Calculated heat loss (kW)." },
+          "kwh_m2":                   { "type": ["string", "null"], "description": "Annual demand per m² (kWh/m²). Numeric string." },
+
+          "measured_heat_loss":       { "type": ["number", "null"] },
+          "measured_heat_loss_range": { "type": ["number", "null"] },
+          "measured_design_DT":       { "type": ["number", "null"], "description": "Measured design ΔT (°C)." },
+          "measured_base_DT":         { "type": ["number", "null"] },
+          "measured_emitter_spec":    { "type": ["string", "null"], "description": "Numeric string." },
+          "measured_system_volume":   { "type": ["string", "null"], "description": "Litres. Numeric string." },
+          "measured_max_flow_temp_coldest_day":  { "type": ["number", "null"], "description": "°C." },
+          "measured_mean_flow_temp_coldest_day": { "type": ["number", "null"], "description": "°C." },
+          "measured_outside_temp_coldest_day":   { "type": ["number", "null"], "description": "°C." },
+          "measured_room_temp_coldest_day":      { "type": ["number", "null"], "description": "°C." },
+
+          "weighted_average_flow_minus_outside": { "type": ["string", "null"], "description": "Numeric string." },
+          "weighted_average_ideal_carnot":       { "type": ["string", "null"], "description": "Numeric string." },
+          "weighted_flow_temp":                  { "type": ["string", "null"], "description": "Numeric string." },
+
+          "electricity_tariff":                  { "type": ["string", "null"] },
+          "electricity_tariff_type":             { "type": ["string", "null"] },
+          "electricity_tariff_unit_rate_all":    { "type": ["string", "null"], "description": "£/kWh. Numeric string." },
+          "electricity_tariff_unit_rate_hp":     { "type": ["string", "null"], "description": "£/kWh. Numeric string." },
+          "solar_pv_generation":                 { "type": ["string", "null"], "description": "Numeric string." },
+          "solar_pv_self_consumption":           { "type": ["string", "null"], "description": "Numeric string." },
+          "solar_pv_divert":                     { "type": ["string", "null"] },
+          "battery_storage_capacity":            { "type": ["string", "null"], "description": "kWh. Numeric string." },
+          "installation_Cost":                   { "type": ["integer", "null"], "description": "Note the capitalised 'C' as returned by the upstream API." },
+
+          "mid_metering":                            { "type": ["integer", "null"], "description": "MID-approved metering present (0/1)." },
+          "electric_meter":                          { "type": ["string",  "null"] },
+          "heat_meter":                              { "type": ["string",  "null"] },
+          "metering_inc_boost":                      { "type": ["integer", "null"], "description": "0/1." },
+          "metering_inc_immersion":                  { "type": ["integer", "null"], "description": "0/1." },
+          "metering_inc_central_heating_pumps":      { "type": ["integer", "null"], "description": "0/1." },
+          "metering_inc_secondary_heating_pumps":    { "type": ["integer", "null"], "description": "0/1." },
+          "metering_inc_brine_pumps":                { "type": ["integer", "null"], "description": "0/1." },
+          "metering_inc_controls":                   { "type": ["integer", "null"], "description": "0/1." },
+
+          "notes":                  { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      },
+      "SystemStats": {
+        "type": "object",
+        "description": "Stats summary for one system over a window. Field set verified against /system/stats/last90 and /system/stats/monthly on 2026-05-07.\n\n* The `last7`/`last30`/`last90`/`last365`/`all`/custom-window endpoints return numeric fields as JSON numbers.\n* `/system/stats/monthly` returns numeric fields as JSON strings (numeric strings).\n* `timestamp` may also be the boolean `false` for systems that have never been scored.\n\nThe schema accepts both representations. Dynamic per-tariff `unit_rate_*` fields are absorbed by `additionalProperties: true`.",
+        "properties": {
+          "id":                     { "type": ["integer", "string"] },
+          "timestamp":              { "type": ["number", "string", "boolean", "null"], "description": "Unix epoch seconds. For /system/stats/monthly this is the start-of-month timestamp; for some systems it is `false`." },
+
+          "combined_elec_kwh":         { "type": ["number", "string", "null"] },
+          "combined_heat_kwh":         { "type": ["number", "string", "null"] },
+          "combined_cop":              { "type": ["number", "string", "null"] },
+          "combined_data_length":      { "type": ["integer", "string", "null"], "description": "Seconds. Divide by 86400 for days." },
+          "combined_elec_mean":        { "type": ["number", "string", "null"], "description": "W." },
+          "combined_heat_mean":        { "type": ["number", "string", "null"], "description": "W." },
+          "combined_flowT_mean":       { "type": ["number", "string", "null"], "description": "°C." },
+          "combined_returnT_mean":     { "type": ["number", "string", "null"], "description": "°C." },
+          "combined_outsideT_mean":    { "type": ["number", "string", "null"], "description": "°C." },
+          "combined_roomT_mean":       { "type": ["number", "string", "null"], "description": "°C." },
+          "combined_prc_carnot":       { "type": ["number", "string", "null"], "description": "Fraction of Carnot efficiency." },
+          "combined_cooling_kwh":      { "type": ["number", "string", "null"] },
+          "combined_starts":           { "type": ["integer", "string", "null"], "description": "Compressor start count." },
+          "combined_starts_per_hour":  { "type": ["number", "string", "null"] },
+
+          "running_elec_kwh":      { "type": ["number", "string", "null"] },
+          "running_heat_kwh":      { "type": ["number", "string", "null"] },
+          "running_cop":           { "type": ["number", "string", "null"] },
+          "running_data_length":   { "type": ["integer", "string", "null"] },
+          "running_elec_mean":     { "type": ["number", "string", "null"] },
+          "running_heat_mean":     { "type": ["number", "string", "null"] },
+          "running_flowT_mean":    { "type": ["number", "string", "null"] },
+          "running_returnT_mean":  { "type": ["number", "string", "null"] },
+          "running_outsideT_mean": { "type": ["number", "string", "null"] },
+          "running_roomT_mean":    { "type": ["number", "string", "null"] },
+          "running_prc_carnot":    { "type": ["number", "string", "null"] },
+
+          "space_elec_kwh":      { "type": ["number", "string", "null"] },
+          "space_heat_kwh":      { "type": ["number", "string", "null"] },
+          "space_cop":           { "type": ["number", "string", "null"] },
+          "space_data_length":   { "type": ["integer", "string", "null"] },
+          "space_elec_mean":     { "type": ["number", "string", "null"] },
+          "space_heat_mean":     { "type": ["number", "string", "null"] },
+          "space_flowT_mean":    { "type": ["number", "string", "null"] },
+          "space_returnT_mean":  { "type": ["number", "string", "null"] },
+          "space_outsideT_mean": { "type": ["number", "string", "null"] },
+          "space_roomT_mean":    { "type": ["number", "string", "null"] },
+          "space_prc_carnot":    { "type": ["number", "string", "null"] },
+
+          "water_elec_kwh":      { "type": ["number", "string", "null"] },
+          "water_heat_kwh":      { "type": ["number", "string", "null"] },
+          "water_cop":           { "type": ["number", "string", "null"] },
+          "water_data_length":   { "type": ["integer", "string", "null"] },
+          "water_elec_mean":     { "type": ["number", "string", "null"] },
+          "water_heat_mean":     { "type": ["number", "string", "null"] },
+          "water_flowT_mean":    { "type": ["number", "string", "null"] },
+          "water_returnT_mean":  { "type": ["number", "string", "null"] },
+          "water_outsideT_mean": { "type": ["number", "string", "null"] },
+          "water_roomT_mean":    { "type": ["number", "string", "null"] },
+          "water_prc_carnot":    { "type": ["number", "string", "null"] },
+
+          "cooling_elec_kwh":      { "type": ["number", "string", "null"] },
+          "cooling_heat_kwh":      { "type": ["number", "string", "null"], "description": "Heat removed in cooling mode (kWh)." },
+          "cooling_cop":           { "type": ["number", "string", "null"] },
+          "cooling_data_length":   { "type": ["integer", "string", "null"] },
+          "cooling_elec_mean":     { "type": ["number", "string", "null"] },
+          "cooling_heat_mean":     { "type": ["number", "string", "null"] },
+          "cooling_flowT_mean":    { "type": ["number", "string", "null"] },
+          "cooling_returnT_mean":  { "type": ["number", "string", "null"] },
+          "cooling_outsideT_mean": { "type": ["number", "string", "null"] },
+          "cooling_roomT_mean":    { "type": ["number", "string", "null"] },
+          "cooling_prc_carnot":    { "type": ["number", "string", "null"] },
+
+          "weighted_flowT":                 { "type": ["number", "string", "null"] },
+          "weighted_outsideT":              { "type": ["number", "string", "null"] },
+          "weighted_flowT_minus_outsideT":  { "type": ["number", "string", "null"] },
+          "weighted_flowT_minus_returnT":   { "type": ["number", "string", "null"] },
+          "weighted_elec":                  { "type": ["number", "string", "null"] },
+          "weighted_heat":                  { "type": ["number", "string", "null"] },
+          "weighted_prc_carnot":            { "type": ["number", "string", "null"] },
+          "weighted_kwh_elec":              { "type": ["number", "string", "null"] },
+          "weighted_kwh_heat":              { "type": ["number", "string", "null"] },
+          "weighted_kwh_heat_running":      { "type": ["number", "string", "null"] },
+          "weighted_kwh_elec_running":      { "type": ["number", "string", "null"] },
+          "weighted_kwh_carnot_elec":       { "type": ["number", "string", "null"] },
+          "weighted_time_on":               { "type": ["integer", "string", "null"], "description": "Seconds the heat pump was running, weighted." },
+          "weighted_time_total":            { "type": ["integer", "string", "null"], "description": "Total weighted seconds in the window." },
+          "weighted_cycle_count":           { "type": ["integer", "string", "null"] },
+
+          "starts":             { "type": ["integer", "string", "null"], "description": "Present in /system/stats/monthly entries (alongside `combined_starts`)." },
+          "starts_per_hour":    { "type": ["number", "string", "null"], "description": "Present in /system/stats/monthly entries." },
+
+          "from_energy_feeds_elec_kwh": { "type": ["number", "string", "null"], "description": "Electrical energy from cumulative kWh feeds rather than power integration." },
+          "from_energy_feeds_heat_kwh": { "type": ["number", "string", "null"] },
+          "from_energy_feeds_cop":      { "type": ["number", "string", "null"] },
+
+          "quality_elec":     { "type": ["number", "string", "null"], "description": "Coverage / data-quality indicator for the electrical signal in this window." },
+          "quality_heat":     { "type": ["number", "string", "null"] },
+          "quality_flowT":    { "type": ["number", "string", "null"] },
+          "quality_returnT":  { "type": ["number", "string", "null"] },
+          "quality_outsideT": { "type": ["number", "string", "null"] },
+          "quality_roomT":    { "type": ["number", "string", "null"] },
+
+          "error_air":     { "type": ["number", "string", "null"] },
+          "error_air_kwh": { "type": ["number", "string", "null"] },
+          "immersion_kwh": { "type": ["number", "string", "null"] },
+          "boiler_kwh":    { "type": ["number", "string", "null"] },
+
+          "unit_rate_agile": { "type": ["number", "string", "null"], "description": "Octopus Agile mean unit rate over the window (£/kWh)." },
+          "unit_rate_cosy":  { "type": ["number", "string", "null"], "description": "Octopus Cosy mean unit rate over the window (£/kWh)." },
+          "unit_rate_go":    { "type": ["number", "string", "null"], "description": "Octopus Go mean unit rate over the window (£/kWh)." }
+        },
+        "additionalProperties": true
+      },
+      "TimeseriesAvailable": {
+        "type": "object",
+        "description": "Result of /timeseries/available?id=...",
+        "properties": {
+          "feeds": {
+            "type": "object",
+            "description": "Map of feed name to feed descriptor.",
+            "additionalProperties": { "$ref": "#/components/schemas/TimeseriesFeed" }
+          },
+          "start_date":   { "type": ["integer", "null"], "description": "Earliest sample timestamp across all feeds (unix epoch seconds)." },
+          "config_cache": { "description": "Internal cache marker. Treat as opaque." }
+        },
+        "required": ["feeds"],
+        "additionalProperties": true
+      },
+      "TimeseriesFeed": {
+        "type": "object",
+        "description": "Metadata for a single feed. `unit` is omitted for feeds whose unit is not configured upstream.",
+        "properties": {
+          "start_time": { "type": ["integer", "null"], "description": "Unix epoch seconds." },
+          "end_time":   { "type": ["integer", "null"], "description": "Unix epoch seconds." },
+          "interval":   { "type": ["number",  "null"], "description": "Mean sampling interval in seconds." },
+          "npoints":    { "type": ["integer", "null"], "description": "Total number of samples." },
+          "unit":       { "type": ["string",  "null"], "description": "Engineering unit (e.g. W, kWh, C). May be absent." }
+        },
+        "additionalProperties": true
+      }
+    }
+  }
+}
