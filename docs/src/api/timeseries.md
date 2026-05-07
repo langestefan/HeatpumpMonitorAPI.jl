@@ -17,4 +17,3 @@ Per-feed timeseries data
 ```@raw html
 <OAOperation operationId="timeseriesData" prefix-headings="true" />
 ```
-

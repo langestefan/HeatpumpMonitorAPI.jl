@@ -40,10 +40,12 @@ function _run_cassette_tests(BrokenRecord)
         # are ignored so cassettes recorded on one version replay on
         # another. Credential-bearing headers are also stripped before
         # they hit disk.
-        ignore_headers = ["Authorization", "X-API-Key", "api_key",
-                          "X-Api-Key", "Cookie", "Set-Cookie",
-                          "Proxy-Authorization", "User-Agent",
-                          "Accept-Encoding"],
+        ignore_headers = [
+            "Authorization", "X-API-Key", "api_key",
+            "X-Api-Key", "Cookie", "Set-Cookie",
+            "Proxy-Authorization", "User-Agent",
+            "Accept-Encoding",
+        ],
         ignore_query = ["api_key", "token", "access_token"],
     )
 
@@ -93,12 +95,14 @@ function _run_cassette_tests(BrokenRecord)
     let start_ts = 1748000000, end_ts = start_ts + 86400
         @testset "timeseries_data" begin
             data, response = BrokenRecord.playback("timeseries_data_id1.yml") do
-                timeseries_data(apis.timeseries, Int64(1),
+                timeseries_data(
+                    apis.timeseries, Int64(1),
                     "heatpump_elec,heatpump_heat,heatpump_flowT";
                     start = string(start_ts),
                     var"__end__" = string(end_ts),
                     interval = 3600,
-                    average = 1)
+                    average = 1
+                )
             end
             @test response.status == 200
             @test haskey(data, "heatpump_elec")

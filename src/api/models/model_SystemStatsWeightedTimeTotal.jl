@@ -15,7 +15,7 @@ mutable struct SystemStatsWeightedTimeTotal <: OpenAPI.AnyOfAPIModel
 end # type SystemStatsWeightedTimeTotal
 
 function OpenAPI.property_type(::Type{ SystemStatsWeightedTimeTotal }, name::Symbol, json::Dict{String,Any})
-    
+
     # no discriminator specified, can't determine the exact type
     return fieldtype(SystemStatsWeightedTimeTotal, name)
 end

@@ -15,7 +15,7 @@ mutable struct SystemMetaHeatpumpHeatFeedid <: OpenAPI.AnyOfAPIModel
 end # type SystemMetaHeatpumpHeatFeedid
 
 function OpenAPI.property_type(::Type{ SystemMetaHeatpumpHeatFeedid }, name::Symbol, json::Dict{String,Any})
-    
+
     # no discriminator specified, can't determine the exact type
     return fieldtype(SystemMetaHeatpumpHeatFeedid, name)
 end

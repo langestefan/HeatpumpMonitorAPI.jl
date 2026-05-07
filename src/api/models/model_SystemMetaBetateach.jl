@@ -14,7 +14,7 @@ mutable struct SystemMetaBetateach <: OpenAPI.AnyOfAPIModel
 end # type SystemMetaBetateach
 
 function OpenAPI.property_type(::Type{ SystemMetaBetateach }, name::Symbol, json::Dict{String,Any})
-    
+
     # no discriminator specified, can't determine the exact type
     return fieldtype(SystemMetaBetateach, name)
 end

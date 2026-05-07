@@ -15,7 +15,7 @@ mutable struct SystemStatsCombinedDataLength <: OpenAPI.AnyOfAPIModel
 end # type SystemStatsCombinedDataLength
 
 function OpenAPI.property_type(::Type{ SystemStatsCombinedDataLength }, name::Symbol, json::Dict{String,Any})
-    
+
     # no discriminator specified, can't determine the exact type
     return fieldtype(SystemStatsCombinedDataLength, name)
 end

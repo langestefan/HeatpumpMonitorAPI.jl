@@ -105,12 +105,16 @@ function flatten_timeseries(data::AbstractDict)
 end
 
 function _flatten_row(row)
-    length(row) == 2 || throw(ArgumentError(
-        "expected [timestamp_ms, value]; got vector of length $(length(row))"
-    ))
+    length(row) == 2 || throw(
+        ArgumentError(
+            "expected [timestamp_ms, value]; got vector of length $(length(row))"
+        )
+    )
     ts_ms = row[1]
-    ts_ms isa Real || throw(ArgumentError(
-        "timestamp must be numeric (unix epoch ms); got $(typeof(ts_ms))"
-    ))
+    ts_ms isa Real || throw(
+        ArgumentError(
+            "timestamp must be numeric (unix epoch ms); got $(typeof(ts_ms))"
+        )
+    )
     return (unix2datetime(ts_ms / 1000), as_number(row[2]))
 end

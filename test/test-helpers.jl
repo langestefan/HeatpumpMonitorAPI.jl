@@ -37,7 +37,7 @@ end
         rows = parse_daily_stats(csv)
         @test length(rows) == 2
         @test rows[1]["id"] === 1.0
-        @test rows[1]["timestamp"] === 1.641945600e9
+        @test rows[1]["timestamp"] === 1.6419456e9
         @test rows[1]["combined_cop"] === 2.4
         @test rows[2]["combined_cop"] === 2.1
     end
@@ -74,9 +74,11 @@ end
 @testset "flatten_timeseries" begin
     @testset "happy path with mix of values and nothings" begin
         raw = Dict{String, Vector{Vector{Any}}}(
-            "heatpump_elec" => [[1641945600000, 19.5],
-                                [1641949200000, nothing],
-                                [1641952800000, 21.0]],
+            "heatpump_elec" => [
+                [1641945600000, 19.5],
+                [1641949200000, nothing],
+                [1641952800000, 21.0],
+            ],
         )
         out = flatten_timeseries(raw)
         @test haskey(out, "heatpump_elec")
@@ -107,10 +109,13 @@ end
 
     @testset "malformed rows raise ArgumentError" begin
         @test_throws ArgumentError flatten_timeseries(
-            Dict("f" => [[1641945600000]]))                 # length 1
+            Dict("f" => [[1641945600000]])
+        )                 # length 1
         @test_throws ArgumentError flatten_timeseries(
-            Dict("f" => [[1641945600000, 1.0, 2.0]]))       # length 3
+            Dict("f" => [[1641945600000, 1.0, 2.0]])
+        )       # length 3
         @test_throws ArgumentError flatten_timeseries(
-            Dict("f" => [["not a number", 1.0]]))           # bad timestamp
+            Dict("f" => [["not a number", 1.0]])
+        )           # bad timestamp
     end
 end

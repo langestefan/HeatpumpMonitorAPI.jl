@@ -15,7 +15,7 @@ mutable struct SystemStatsCombinedElecMean <: OpenAPI.AnyOfAPIModel
 end # type SystemStatsCombinedElecMean
 
 function OpenAPI.property_type(::Type{ SystemStatsCombinedElecMean }, name::Symbol, json::Dict{String,Any})
-    
+
     # no discriminator specified, can't determine the exact type
     return fieldtype(SystemStatsCombinedElecMean, name)
 end

@@ -15,7 +15,7 @@ mutable struct SystemStatsCombinedPrcCarnot <: OpenAPI.AnyOfAPIModel
 end # type SystemStatsCombinedPrcCarnot
 
 function OpenAPI.property_type(::Type{ SystemStatsCombinedPrcCarnot }, name::Symbol, json::Dict{String,Any})
-    
+
     # no discriminator specified, can't determine the exact type
     return fieldtype(SystemStatsCombinedPrcCarnot, name)
 end

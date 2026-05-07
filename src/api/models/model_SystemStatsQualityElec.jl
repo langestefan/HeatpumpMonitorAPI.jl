@@ -15,7 +15,7 @@ mutable struct SystemStatsQualityElec <: OpenAPI.AnyOfAPIModel
 end # type SystemStatsQualityElec
 
 function OpenAPI.property_type(::Type{ SystemStatsQualityElec }, name::Symbol, json::Dict{String,Any})
-    
+
     # no discriminator specified, can't determine the exact type
     return fieldtype(SystemStatsQualityElec, name)
 end

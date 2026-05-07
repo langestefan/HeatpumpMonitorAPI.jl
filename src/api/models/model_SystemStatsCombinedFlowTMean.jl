@@ -15,7 +15,7 @@ mutable struct SystemStatsCombinedFlowTMean <: OpenAPI.AnyOfAPIModel
 end # type SystemStatsCombinedFlowTMean
 
 function OpenAPI.property_type(::Type{ SystemStatsCombinedFlowTMean }, name::Symbol, json::Dict{String,Any})
-    
+
     # no discriminator specified, can't determine the exact type
     return fieldtype(SystemStatsCombinedFlowTMean, name)
 end

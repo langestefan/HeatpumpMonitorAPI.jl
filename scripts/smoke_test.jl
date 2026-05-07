@@ -22,7 +22,7 @@ results = Tuple{String, Symbol, String}[]   # (name, :ok|:err, detail)
 
 function record(f::Function, name::AbstractString)
     print(rpad(name, 38))
-    try
+    return try
         result, response = f()
         kind = result === nothing ? "Nothing" : string(typeof(result))
         # Truncate long type names for terminal readability
@@ -42,20 +42,42 @@ end
 # in the list and has been there for years — safe to hard-code for a smoke test.
 const PROBE_ID = Int64(1)
 
-record("list_public_systems")          do; list_public_systems(system)               end
-record("get_system(id=$PROBE_ID)")     do; get_system(system, PROBE_ID)               end
-record("stats_last7")                  do; stats_last7(system)                        end
-record("stats_last30")                 do; stats_last30(system)                       end
-record("stats_last90")                 do; stats_last90(system)                       end
-record("stats_last365")                do; stats_last365(system)                      end
-record("stats_all")                    do; stats_all(system)                          end
-record("stats_last90 (id=$PROBE_ID)")  do; stats_last90(system; id = PROBE_ID)        end
-record("stats_custom_window")          do
+record("list_public_systems") do;
+    list_public_systems(system)
+end
+record("get_system(id=$PROBE_ID)") do;
+    get_system(system, PROBE_ID)
+end
+record("stats_last7") do;
+    stats_last7(system)
+end
+record("stats_last30") do;
+    stats_last30(system)
+end
+record("stats_last90") do;
+    stats_last90(system)
+end
+record("stats_last365") do;
+    stats_last365(system)
+end
+record("stats_all") do;
+    stats_all(system)
+end
+record("stats_last90 (id=$PROBE_ID)") do;
+    stats_last90(system; id = PROBE_ID)
+end
+record("stats_custom_window") do
     stats_custom_window(system; id = PROBE_ID, start = "2026-01-01", var"__end__" = "2026-02-01")
 end
-record("stats_daily(id=$PROBE_ID)")    do; stats_daily(system, PROBE_ID)              end
-record("stats_monthly(id=$PROBE_ID)")  do; stats_monthly(system, PROBE_ID)            end
-record("timeseries_available")         do; timeseries_available(ts, PROBE_ID)         end
+record("stats_daily(id=$PROBE_ID)") do;
+    stats_daily(system, PROBE_ID)
+end
+record("stats_monthly(id=$PROBE_ID)") do;
+    stats_monthly(system, PROBE_ID)
+end
+record("timeseries_available") do;
+    timeseries_available(ts, PROBE_ID)
+end
 
 # Probe timeseries_data with valid feed names discovered above. We only run
 # this if /timeseries/available succeeded and gave us names to work with.
@@ -77,11 +99,13 @@ let avail_result = nothing
             picked = join(feed_names[1:min(3, length(feed_names))], ",")
             now_ts = round(Int, datetime2unix(now(UTC)))
             record("timeseries_data ($picked)") do
-                timeseries_data(ts, PROBE_ID, picked;
-                                start = string(now_ts - 86400),
-                                var"__end__" = string(now_ts),
-                                interval = 3600,
-                                average = 1)
+                timeseries_data(
+                    ts, PROBE_ID, picked;
+                    start = string(now_ts - 86400),
+                    var"__end__" = string(now_ts),
+                    interval = 3600,
+                    average = 1
+                )
             end
         else
             println(rpad("timeseries_data", 38), "SKIP — no feed names discovered")

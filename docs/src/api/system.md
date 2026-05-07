@@ -89,4 +89,3 @@ System metadata and statistics
 ```@raw html
 <OAOperation operationId="statsMonthly" prefix-headings="true" />
 ```
-
