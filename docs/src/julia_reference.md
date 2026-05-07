@@ -18,6 +18,7 @@ NoAuth
 BearerToken
 APIKey
 BasicAuth
+resolve_credentials
 HeatpumpMonitorAPI.apply!
 HeatpumpMonitorAPI.build_pre_request_hook
 ```
@@ -32,6 +33,8 @@ ServerError
 AuthError
 RateLimitError
 TimeoutError
+check_response
+HeatpumpMonitorAPI.parse_retry_after
 ```
 
 ## Reliability
@@ -39,6 +42,8 @@ TimeoutError
 ```@docs
 RetryPolicy
 with_retry
+HeatpumpMonitorAPI.is_retryable
+HeatpumpMonitorAPI.backoff_delay
 TokenBucket
 acquire!
 with_rate_limit
@@ -48,6 +53,12 @@ redact_headers
 DefaultMiddleware
 default_middleware
 with_defaults
+```
+
+## Pretty printing
+
+```@docs
+Base.show(::IO, ::MIME"text/plain", ::T) where T <: OpenAPI.APIModel
 ```
 
 ## Pagination

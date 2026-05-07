@@ -40,6 +40,12 @@ const PAGES = Any[
     ],
     "Julia API Reference" => "julia_reference.md",
 ]
+if HAS_SPEC
+    # The Julia-side counterpart to the REST browser: every name codegen
+    # emitted, with whatever docstrings it attached. Only present when
+    # there is a spec (and therefore a `src/api/` tree).
+    push!(PAGES, "Generated Reference" => "generated_reference.md")
+end
 if !isempty(API_PAGES)
     push!(PAGES, "REST API Reference" => Any[
         "Overview" => "api/index.md",
