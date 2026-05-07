@@ -36,9 +36,14 @@ function _run_cassette_tests(BrokenRecord)
         # Strip credential-bearing fields before they hit disk. Header
         # matching is case-sensitive, so list common case variants of
         # the same name (`api_key` vs `X-API-Key`).
+        # Headers that vary by environment (Julia/HTTP.jl version, OS)
+        # are ignored so cassettes recorded on one version replay on
+        # another. Credential-bearing headers are also stripped before
+        # they hit disk.
         ignore_headers = ["Authorization", "X-API-Key", "api_key",
                           "X-Api-Key", "Cookie", "Set-Cookie",
-                          "Proxy-Authorization"],
+                          "Proxy-Authorization", "User-Agent",
+                          "Accept-Encoding"],
         ignore_query = ["api_key", "token", "access_token"],
     )
 
