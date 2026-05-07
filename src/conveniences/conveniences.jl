@@ -6,6 +6,12 @@ using OpenAPI: OpenAPI
 
 include("helpers.jl")
 
+"""
+    DEFAULT_BASE_URL :: String
+
+Default base URL for HeatpumpMonitor.org. [`HeatpumpMonitorClient`](@ref)
+uses this when no `base_url` is supplied.
+"""
 const DEFAULT_BASE_URL = "https://heatpumpmonitor.org"
 
 """

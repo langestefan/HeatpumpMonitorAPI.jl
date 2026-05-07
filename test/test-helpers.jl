@@ -15,6 +15,16 @@ using Test
     @test as_number("") === nothing
     @test as_number("   ") === nothing
     @test as_number("not a number") === nothing
+
+    # AnyOfAPIModel wrapper: codegen produces these for `type: [..., ...]` fields.
+    api_mod = HeatpumpMonitorAPI.HeatpumpMonitorAPIAPI
+    if isdefined(api_mod, :SystemStatsCombinedDataLength)
+        T = getfield(api_mod, :SystemStatsCombinedDataLength)
+        @test as_number(T(86400)) === 86400.0
+        @test as_number(T("86400")) === 86400.0
+        @test as_number(T(nothing)) === nothing
+        @test as_number(T()) === nothing   # value field undefined
+    end
 end
 
 @testset "parse_daily_stats" begin

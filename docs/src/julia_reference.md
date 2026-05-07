@@ -57,3 +57,19 @@ paginate_cursor
 paginate_offset
 paginate_pagenum
 ```
+
+## HeatpumpMonitor conveniences
+
+```@docs
+HeatpumpMonitorClient
+heatpumpmonitor_apis
+DEFAULT_BASE_URL
+```
+
+## Helpers
+
+```@docs
+as_number
+parse_daily_stats
+flatten_timeseries
+```

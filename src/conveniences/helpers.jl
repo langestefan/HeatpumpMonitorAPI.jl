@@ -1,4 +1,5 @@
 using Dates: DateTime, unix2datetime
+using OpenAPI: OpenAPI
 
 """
     as_number(x) -> Union{Float64, Nothing}
@@ -33,6 +34,10 @@ function as_number(x::AbstractString)
     isempty(s) && return nothing
     return tryparse(Float64, s)
 end
+# Codegen wraps fields with `type: [...]` arrays in `AnyOfAPIModel` /
+# `OneOfAPIModel` structs holding a `.value::Any` payload. Unwrap and recurse.
+as_number(x::OpenAPI.AnyOfAPIModel) = isdefined(x, :value) ? as_number(x.value) : nothing
+as_number(x::OpenAPI.OneOfAPIModel) = isdefined(x, :value) ? as_number(x.value) : nothing
 
 """
     parse_daily_stats(csv::AbstractString) -> Vector{Dict{String, Union{Float64, Nothing}}}
